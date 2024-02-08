@@ -7,38 +7,76 @@
 <body>
   <h2>Blue Horizon Defense</h2>
   <p id="status">OpenCV.js is loading...</p>
-
+  <video id="video" muted width="320" height="240"></video>
+  <div class="caption">Video <input type="file" id="fileInput" name="file" /></div>
+  <canvas id="canvasOutput" width="320" height="240"></canvas>
+  <script async src="opencv.js" type="text/javascript" onload="onCvLoaded();"></script>
   
-  <div>
-    <div class="inputoutput">
-      <img id="imageSrc" alt="No video" />
-      <div class="caption">Video <input type="file" id="fileInput" name="file" /></div>
-    </div>
-    <div class="inputoutput">
-      <canvas id="canvasOutput"></canvas>
-      <div class="caption">canvasOutput</div>
-    </div>
-    
-  </div>
-  <script type="text/javascript">
-    let imgElement = document.getElementById('imageSrc');
+
+  <script>
+    function onCvLoaded () {
+        console.log('cv', cv);
+        cv.onRuntimeInitialized = onReady;
+    }
+    let video = document.getElementById('video');
     let inputElement = document.getElementById('fileInput');
     inputElement.addEventListener('change', (e) => {
-      imgElement.src = URL.createObjectURL(e.target.files[0]);
-    }, false);
-    imgElement.onload = function () {
-      let mat = cv.imread(imgElement);
-      cv.imshow('canvasOutput', mat);
-      mat.delete();
-    };
-    var Module = {
-      // https://emscripten.org/docs/api_reference/module.html#Module.onRuntimeInitialized
-      onRuntimeInitialized() {
-        document.getElementById('status').innerHTML = 'OpenCV.js is ready.';
-      }
-
-      
-    };
+          video.src = URL.createObjectURL(e.target.files[0]);
+        }, false);
+        video.onload = function () {
+          let mat = cv.imread(video);
+          cv.imshow('canvasOutput', mat);
+          mat.delete();
+        };
+    const actionBtn = document.getElementById('actionBtn');
+    const FPS = 30;
+    let stream;
+    let streaming = false;
+    function onReady () {
+        console.log('ready?');
+        let src;
+        let dst;
+        let cap;
+    
+        video.controls = true;
+        video.addEventListener('play', start);
+        video.addEventListener('pause', stop);
+        video.addEventListener('ended', stop);
+    
+        function start () {
+            console.log('playing...');
+            streaming = true;
+            const width = video.width;
+            const height = video.height;
+            src = new cv.Mat(height, width, cv.CV_8UC4);
+            dst = new cv.Mat(height, width, cv.CV_8UC1);
+            cap = new cv.VideoCapture(video);
+            setTimeout(processVideo, 0);
+        }
+    
+        function stop () {
+            console.log('paused or ended');
+            streaming = false;
+        }
+    
+        function processVideo () {
+            if (!streaming) {
+                src.delete();
+                dst.delete();
+                return;
+            }
+            const begin = Date.now();
+            cap.read(src)
+            cv.cvtColor(src, dst, cv.COLOR_RGBA2RGB);
+            cv.imshow('canvasOutput', dst);
+           // cv.imwrite('C:/Images', dst);
+            const delay = 2000;//1000/FPS - (Date.now() - begin);
+            setTimeout(processVideo, delay);
+ 
+    
+    
+        }
+    }
 
     
   </script>
