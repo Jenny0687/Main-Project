@@ -6,7 +6,7 @@
 </head>
 <body>
   <h2>Blue Horizon Defense</h2>
-  <p id="status">OpenCV.js is loading...</p>
+  <p id="status">Upload a video to start</p>
   <video id="video" muted width="320" height="240"></video>
   <div class="caption">Video <input type="file" id="fileInput" name="file" /></div>
   <canvas id="canvasOutput" width="320" height="240"></canvas>
@@ -41,10 +41,10 @@
         video.controls = true;
         video.addEventListener('play', start);
         video.addEventListener('pause', stop);
-        video.addEventListener('ended', stop);
+       // video.addEventListener('ended', stop);
     
         function start () {
-            console.log('playing...');
+            console.log('playing video');
             streaming = true;
             const width = video.width;
             const height = video.height;
@@ -71,6 +71,7 @@
             cv.imshow('canvasOutput', dst);
            // cv.imwrite('C:/Images', dst);
             const delay = 2000;//1000/FPS - (Date.now() - begin);
+            
             setTimeout(processVideo, delay);
  
     
