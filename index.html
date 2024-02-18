@@ -9,10 +9,9 @@
   <p id="status">Upload a video to start</p>
   <video id="video" muted width="320" height="240"></video>
   <div class="caption">Video <input type="file" id="fileInput" name="file" /></div>
-  <canvas id="canvasOutput" width="320" height="240"></canvas>
+  <canvas id="canvasOutput1" width="320" height="240"></canvas>
   <script async src="opencv.js" type="text/javascript" onload="onCvLoaded();"></script>
   
-
   <script>
     function onCvLoaded () {
         console.log('cv', cv);
@@ -25,23 +24,20 @@
         }, false);
         video.onload = function () {
           let mat = cv.imread(video);
-          cv.imshow('canvasOutput', mat);
           mat.delete();
         };
     const actionBtn = document.getElementById('actionBtn');
     const FPS = 30;
-    let stream;
     let streaming = false;
+    let count = 0;
     function onReady () {
         console.log('ready?');
         let src;
-        let dst;
         let cap;
     
         video.controls = true;
         video.addEventListener('play', start);
         video.addEventListener('pause', stop);
-       // video.addEventListener('ended', stop);
     
         function start () {
             console.log('playing video');
@@ -49,7 +45,6 @@
             const width = video.width;
             const height = video.height;
             src = new cv.Mat(height, width, cv.CV_8UC4);
-            dst = new cv.Mat(height, width, cv.CV_8UC1);
             cap = new cv.VideoCapture(video);
             setTimeout(processVideo, 0);
         }
@@ -62,20 +57,26 @@
         function processVideo () {
             if (!streaming) {
                 src.delete();
-                dst.delete();
                 return;
             }
             const begin = Date.now();
+            count = count + 1;
+            if (count > 1) {
+              let newCanvas = document.createElement("canvas");
+              newCanvas.setAttribute("id", "canvasOutput".concat(count));
+              newCanvas.setAttribute("width", 320); 
+              newCanvas.setAttribute("height", 240);
+              newCanvas.setAttribute("title", count);
+              let currentCanvas = document.getElementById("canvasOutput".concat(count-1));
+              document.body.insertBefore(newCanvas, currentCanvas);
+            }
+
             cap.read(src)
-            cv.cvtColor(src, dst, cv.COLOR_RGBA2RGB);
-            cv.imshow('canvasOutput', dst);
-           // cv.imwrite('C:/Images', dst);
-            const delay = 2000;//1000/FPS - (Date.now() - begin);
+            cv.imshow('canvasOutput'.concat(count), src);
+
+            const delay = 1000/FPS - (Date.now() - begin);
             
             setTimeout(processVideo, delay);
- 
-    
-    
         }
     }
 
